@@ -1,22 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: Shop
+  name: shop
+  namespace: tutorial
   labels:
-    app: Shop
+    app: shop
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: Shop
+      app: shop
   template:
     metadata:
       labels:
-        app: Shop
+        app: shop
     spec:
       containers:
-        - name: Shop
-          image: username/Shop:latest
+        - name: shop
+          image: hispres.azurecr.io/shop:v1
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -35,3 +36,8 @@ spec:
             timeoutSeconds: 2
             periodSeconds: 5
             failureThreshold: 5
+          resources:
+            limits:
+              cpu: 500m
+            requests:
+              cpu: 200m
