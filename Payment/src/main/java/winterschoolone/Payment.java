@@ -22,8 +22,12 @@ public class Payment {
         Payed payed = new Payed();
         BeanUtils.copyProperties(this, payed);
         payed.publishAfterCommit();
-
-
+        
+        try {
+                Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+        } catch (InterruptedException e) {
+                e.printStackTrace();
+        }
     }
 
     @PostUpdate
