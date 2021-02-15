@@ -41,4 +41,175 @@ https://github.com/HorangApple/rentalbook
 https://github.com/phone82
 
 # 구현
-ㅁㄴㅇ
+분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 8084, 8088 이다)
+```
+cd SirenOrder
+mvn spring-boot:run  
+
+cd Payment
+mvn spring-boot:run
+
+cd SirenOrderHome
+mvn spring-boot:run 
+
+cd Shop
+mvn spring-boot:run  
+
+cd gateway
+mvn spring-boot:run  
+```
+
+## DDD 의 적용
+msaez.io 를 통해 구현한 Aggregate 단위로 Entity 를 선언 후, 구현을 진행하였다.
+
+Entity Pattern 과 Repository Pattern 을 적용하기 위해 Spring Data REST 의 RestRepository 를 적용하였다.
+
+**SirenOrder 서비스의 SirenOrder.java**
+
+```java 
+package winterschoolone;
+
+import javax.persistence.*;
+import org.springframework.beans.BeanUtils;
+
+import winterschoolone.external.Payment;
+import winterschoolone.external.PaymentService;
+
+import java.util.List;
+
+@Entity
+@Table(name="SirenOrder_table")
+public class SirenOrder {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private String userId;
+    private String menuId;
+    private Integer qty;
+    private String status;
+
+    @PostPersist
+    public void onPostPersist(){
+    	Ordered ordered = new Ordered();
+        BeanUtils.copyProperties(this, ordered);
+        ordered.publishAfterCommit();
+
+        //Following code causes dependency to external APIs
+        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
+
+        Payment payment = new Payment();
+        payment.setOrderId(this.getId());
+        payment.setMenuId(this.menuId);
+        payment.setQty(this.getQty());
+        payment.setUserId(this.getUserId());
+        // mappings goes here
+        SirenOrderApplication.applicationContext.getBean(PaymentService.class)
+        .pay(payment);
+    }
+
+    @PostUpdate
+    public void onPostUpdate(){
+        Updated updated = new Updated();
+        BeanUtils.copyProperties(this, updated);
+        updated.publishAfterCommit();
+
+
+    }
+
+    @PreRemove
+    public void onPreRemove(){
+        OrderCancelled orderCancelled = new OrderCancelled();
+        BeanUtils.copyProperties(this, orderCancelled);
+        orderCancelled.publishAfterCommit();
+
+
+    }
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+    public String getMenuId() {
+        return menuId;
+    }
+
+    public void setMenuId(String menuId) {
+        this.menuId = menuId;
+    }
+    public Integer getQty() {
+        return qty;
+    }
+
+    public void setQty(Integer qty) {
+        this.qty = qty;
+    }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+}
+```
+
+**SirenOrder 서비스의 PolicyHandler.java**
+```java
+package winterschoolone;
+
+import winterschoolone.config.kafka.KafkaProcessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Service;
+
+@Service
+public class PolicyHandler{
+    @StreamListener(KafkaProcessor.INPUT)
+    public void onStringEventListener(@Payload String eventString){
+
+    }
+    
+    @Autowired
+	SirenOrderRepository sirenOrderRepository;
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverAssigned_(@Payload Assigned assigned){
+
+        if(assigned.isMe()){
+        	Optional<SirenOrder> optional = sirenOrderRepository.findById(assigned.getOrderId());
+        	if(optional != null && optional.isPresent())
+        	{
+        		SirenOrder sirenOrder = optional.get();
+        		
+        		sirenOrder.setStatus("Assigned");
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                // view 레파지 토리에 save
+            	sirenOrderRepository.save(sirenOrder);
+        	}
+            
+            System.out.println("##### listener  : " + assigned.toJson());
+        }
+    }
+
+}
+```
