@@ -316,3 +316,5 @@ Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원�
 
 위와 같이 주문을 하게되면 Status가 Assigned까지 Update가 되고
 주문 취소가 되면 Status가 refunded로 Update 되는 것을 볼 수 있다.
+
+또한 Correlation을 key를 활용하여 sirenOrderId를 Key값을 하고 원하는 주문하고 서비스간의 공유가 이루어 졌다.
