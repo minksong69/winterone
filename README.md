@@ -306,10 +306,13 @@ server:
 Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능하게 구현해 두었다.
 본 프로젝트에서 View 역할은 SirenOrderHomes 서비스가 수행한다.
 
--주문(ordered) 실행 후 SirenOrderHomes 화면
+- 주문(ordered) 실행 후 SirenOrderHomes 화면
 
 ![증빙2](https://user-images.githubusercontent.com/53815271/107907619-7e060280-6f97-11eb-89b3-4e3236ff9ddd.png)
 
--주문(OrderCancelled) 취소 후 SirenOrderHomes 화면
+- 주문(OrderCancelled) 취소 후 SirenOrderHomes 화면
 
 ![증빙3](https://user-images.githubusercontent.com/53815271/107908429-5e6fd980-6f99-11eb-8afc-2a2c070a1663.png)
+
+위와 같이 주문을 하게되면 Status가 Assigned까지 Update가 되고
+주문 취소가 되면 Status가 refunded로 Update 되는 것을 볼 수 있다.
