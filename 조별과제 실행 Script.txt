@@ -1,0 +1,156 @@
+계정정보드립니다.
+1팀 팀계정
+
+ID : skteam01@gkn2021hotmail.onmicrosoft.com
+PW : Skcc@123
+바뀐 PW : Skcc1@123
+
+skteam01-rsrcgrp
+
+skteam01-aks
+
+skteam01
+
+az aks update -n skteam01-aks -g skteam01-rsrcgrp --attach-acr skteam01
+
+az aks get-credentials --resource-group skteam01-rsrcgrp --name skteam01-aks
+
+cat <<EOF | kubectl apply -f -
+apiVersion: "v1"
+kind: "Pod"
+metadata: 
+  name: httpie
+  labels: 
+    name: httpie
+spec: 
+  containers: 
+    - name: httpie
+      image: clue/httpie
+      command:
+        - sleep
+        - "360000"
+EOF
+
+kubectl exec -it httpie -- /bin/bash
+
+kubectl --namespace kube-system create sa tiller      # helm 의 설치관리자를 위한 시스템 사용자 생성
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+
+helm repo add incubator https://charts.helm.sh/incubator
+helm repo update
+kubectl create ns kafka
+helm install my-kafka --namespace kafka incubator/kafka
+
+watch kubectl get all -n kafka
+kubectl get all -n kafka
+
+kubectl -n kafka exec my-kafka-0 -- /usr/bin/kafka-topics --zookeeper my-kafka-zookeeper:2181 --topic winterschoolone --create --partitions 1 --replication-factor 1
+
+
+git clone https://github.com/hispres/winterone.git
+
+cd winterone
+
+cd gateway
+
+mvn clean
+mvn compile
+mvn package
+
+az acr build --registry skteam01 --image skteam01.azurecr.io/gateway:v1 .
+
+kubectl create ns tutorial
+
+kubectl create deploy gateway --image=skteam01.azurecr.io/gateway:v1 -n tutorial
+kubectl expose deploy gateway --type=ClusterIP --port=8080 -n tutorial
+
+cd Payment
+
+mvn clean
+mvn compile
+mvn package
+
+az acr build --registry skteam01 --image skteam01.azurecr.io/payment:v1 .
+
+kubectl create deploy payment --image=skteam01.azurecr.io/payment:v1 -n tutorial
+kubectl expose deploy payment --type=ClusterIP --port=8080 -n tutorial
+
+mvn package
+
+az acr build --registry skteam01 --image skteam01.azurecr.io/shop:v1 .
+
+kubectl apply -f ./deployment.yml
+#kubectl create deploy shop --image=skteam01.azurecr.io/shop:v1 -n tutorial
+kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
+
+mvn package
+
+az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorderhome:v1 .
+
+kubectl create deploy sirenorderhome --image=skteam01.azurecr.io/sirenorderhome:v1 -n tutorial
+kubectl expose deploy sirenorderhome --type=ClusterIP --port=8080 -n tutorial
+
+cd SirenOrder
+az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorder:v1 .
+kubectl create configmap apiurl --from-literal=url=http://10.0.92.205:8080 -n tutorial
+kubectl apply -f ./deployment.yml
+kubectl expose deploy sirenorder --type=ClusterIP --port=8080 -n tutorial
+
+
+kubectl exec -it httpie -- /bin/bash
+
+service/gateway          ClusterIP   10.0.14.180   <none>        8080/TCP   49m
+service/payment          ClusterIP   10.0.92.205   <none>        8080/TCP   41m
+service/shop             ClusterIP   10.0.194.22   <none>        8080/TCP   30m
+service/sirenorder       ClusterIP   10.0.97.9     <none>        8080/TCP   88s
+service/sirenorderhome   ClusterIP   10.0.35.166   <none>        8080/TCP   12m
+
+http 10.0.14.180:8080/sirenOrders
+http 10.0.14.180:8080/payments 
+http 10.0.14.180:8080/shops 
+http 10.0.14.180:8080/sirenOrderHomes 
+
+http 10.0.14.180:8080/sirenOrders userId=user1 menuId=menu1 qty=2
+http DELETE 10.0.14.180:8080/sirenOrders/2
+
+kubectl run siege --image=apexacme/siege-nginx -n tutorial
+
+kubectl exec -it pod/siege -c siege -n tutorial -- /bin/bash
+
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.0.14.180:8080/sirenOrders POST {"userId": "user10", "menuId": "menu10", "qty":10}'
+
+kubectl autoscale deploy shop --min=1 --max=10 --cpu-percent=15 -n tutorial
+kubectl exec -it pod/siege -c siege -n tutorial -- /bin/bash
+
+siege -c100 -t120S -r10 -v --content-type "application/json" 'http://10.0.14.180:8080/shops POST {"orderId": 111, "userId": "user10", "menuId": "menu10", "qty":10}'
+
+kubectl delete deployment.apps/shop -n tutorial
+kubectl delete service/shop -n tutorial
+kubectl apply -f ./deployment.yml
+kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
+
+kubectl delete hpa shop -n tutorial
+kubectl apply -f ./deployment_n_read.yml
+
+kubectl exec -it pod/siege -c siege -n tutorial -- /bin/bash
+siege -c100 -t120S -r10 -v --content-type "application/json" 'http://10.0.14.180:8080/shops'
+
+
+kubectl delete deploy shop -n tutorial
+kubectl apply -f ./deployment_live.yml
+kubectl describe deploy shop -n tutorial
+kubectl get all -n tutorial
+
+ckeck points
+-saga : pub/sub 구현 -> 구현완료 (김기웅)
+-cqrs : view 스티커 Mypage (그린스트커) -> SirenOrderHome (김기웅)
+-correlation (서로관련있는 키) -> OrderId (김기웅)
+req/resp Sync 호출 -> 구현완료 ( SirenOrder -> Payment (김기웅)
+gateway : ingress gateway , Spring cloud gateway를 설치하던 -> 구현완료 (김기웅)
+deploy/pipeline : yaml 기반 이미지만든다음 yaml로 해도됨 -> sirenorder deployment.yaml (소민아)
+Circuit Breaker : -> 구현완료 (성성기)
+autoscale(hpa) : 하나마 scale out되는 것 확인 -> 구현완료 (김금)
+zero-downtime deploy(readness probe) : avail한것을 부하테스트로 보여줘야함 -> 구현완료 (손원석)
+config map/persistence volume :마이크로 서비스내에서 활용해야함 -> 구현완료 (신은경)
+polyglot : 주문서비스는 h2, 배송서비스는 mysql -> 구현완료 (김기웅)
+self-healing(Liveness Probe) -> 구현완료 (손원석)
