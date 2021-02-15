@@ -21,7 +21,7 @@
 
 ![EventStormingV1](https://user-images.githubusercontent.com/53815271/107929718-66417500-6fbd-11eb-9754-5dd92a06afe5.png)
 
-# 헥사고날 아키텍처
+# 헥사고날 아키텍처 다이어그램 도출
 
 ![폴리글랏 아키텍처](https://user-images.githubusercontent.com/53815271/107929578-2f6b5f00-6fbd-11eb-9176-ac3455d5c7be.png)
 
