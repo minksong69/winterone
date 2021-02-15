@@ -370,7 +370,7 @@ public interface PaymentService {
 - Payment 서비스 재기동 후 정상동작 확인
 
 ![증빙8](https://user-images.githubusercontent.com/53815271/107910393-a98beb80-6f9d-11eb-833f-150d11f51067.png)
-![증빙8](https://user-images.githubusercontent.com/53815271/107910393-a98beb80-6f9d-11eb-833f-150d11f51067.png)
+![증빙9](https://user-images.githubusercontent.com/53815271/107910394-a98beb80-6f9d-11eb-841c-aa6ab38cf99b.png)
 
-# 
-
+# 운영
+.
