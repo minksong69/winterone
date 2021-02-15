@@ -359,3 +359,18 @@ public interface PaymentService {
 ```
 
 **동작 확인**
+- 잠시 Payment 서비스 중시
+
+![증빙6](https://user-images.githubusercontent.com/53815271/107910391-a85abe80-6f9d-11eb-8dd5-6b7a4d1cdc01.png)
+
+- 주문 요청시 에러 발생
+
+![증빙7](https://user-images.githubusercontent.com/53815271/107910392-a8f35500-6f9d-11eb-98e4-2cf9fa2fbd46.png)
+
+- Payment 서비스 재기동 후 정상동작 확인
+
+![증빙8](https://user-images.githubusercontent.com/53815271/107910393-a98beb80-6f9d-11eb-833f-150d11f51067.png)
+![증빙8](https://user-images.githubusercontent.com/53815271/107910393-a98beb80-6f9d-11eb-833f-150d11f51067.png)
+
+# 
+
