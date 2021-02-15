@@ -213,3 +213,7 @@ public class PolicyHandler{
 
 }
 ```
+
+- DDD 적용 후 REST API의 테스트를 통하여 정상적으로 동작하는 것을 확인할 수 있었다.  
+  
+- 원격 주문 (SirenOrder 동작 후 결과)
