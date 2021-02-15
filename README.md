@@ -219,3 +219,97 @@ public class PolicyHandler{
 - 원격 주문 (SirenOrder 동작 후 결과)
 
 ![증빙1](https://user-images.githubusercontent.com/53815271/107907569-64fd5180-6f97-11eb-9f1e-cb1fb97fd4ff.png)
+
+# GateWay 적용
+API GateWay를 통하여 마이크로 서비스들의 집입점을 통일할 수 있다.
+다음과 같이 GateWay를 적용하였다.
+
+```yaml
+server:
+  port: 8088
+
+---
+
+spring:
+  profiles: default
+  cloud:
+    gateway:
+      routes:
+        - id: SirenOrder
+          uri: http://localhost:8081
+          predicates:
+            - Path=/sirenOrders/** 
+        - id: Payment
+          uri: http://localhost:8082
+          predicates:
+            - Path=/payments/** 
+        - id: Shop
+          uri: http://localhost:8083
+          predicates:
+            - Path=/shops/** 
+        - id: SirenOrderHome
+          uri: http://localhost:8084
+          predicates:
+            - Path= /sirenOrderHomes/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+
+---
+
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: SirenOrder
+          uri: http://SirenOrder:8080
+          predicates:
+            - Path=/sirenOrders/** 
+        - id: Payment
+          uri: http://Payment:8080
+          predicates:
+            - Path=/payments/** 
+        - id: Shop
+          uri: http://Shop:8080
+          predicates:
+            - Path=/shops/** 
+        - id: SirenOrderHome
+          uri: http://SirenOrderHome:8080
+          predicates:
+            - Path= /sirenOrderHomes/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+
+```
+
+#CQRS
+Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능하게 구현해 두었다.
+본 프로젝트에서 View 역할은 SirenOrderHomes 서비스가 수행한다.
+
+-주문(ordered) 실행 후 SirenOrderHomes 화면
+
+![증빙2](https://user-images.githubusercontent.com/53815271/107907619-7e060280-6f97-11eb-89b3-4e3236ff9ddd.png)
+
+-주문(OrderCancelled) 취소 후 SirenOrderHomes 화면
+
+![증빙3](https://user-images.githubusercontent.com/53815271/107908429-5e6fd980-6f99-11eb-8afc-2a2c070a1663.png)
