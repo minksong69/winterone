@@ -314,7 +314,10 @@ Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원�
 
 ![증빙3](https://user-images.githubusercontent.com/53815271/107908429-5e6fd980-6f99-11eb-8afc-2a2c070a1663.png)
 
-위와 같이 주문을 하게되면 Status가 Assigned까지 Update가 되고
+위와 같이 주문을 하게되면 SirenOrder -> Payment -> Shop -> SirenOrder 로 주문이 Assigend 되고
+
 주문 취소가 되면 Status가 refunded로 Update 되는 것을 볼 수 있다.
 
 또한 Correlation을 key를 활용하여 sirenOrderId를 Key값을 하고 원하는 주문하고 서비스간의 공유가 이루어 졌다.
+
+위 결과로 서로 다른 마이크로 서비스 간에 트랜잭션이 묶여 있음을 알 수 있다.
