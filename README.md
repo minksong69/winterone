@@ -548,4 +548,131 @@ kubectl get all -n tutorial
 ```
 ![autoscale(hpa)결과](https://user-images.githubusercontent.com/77368578/107917604-8831fc00-6fab-11eb-83bb-9ba19159d00d.png)
 
+# 서킷 브레이킹
 
+- 서킷 브레이킹 프레임워크의 선택 : Spring FeignClient + Hystrix 옵션을 사용하여 구현함
+- Hystrix를 설정 : 요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도
+  유지되면 CB 회로가 닫히도록(요청을 빠르게 실패처리, 차단) 설정
+
+- 동기 호출 주체인 SirenOrderwinterone에서 Hystrix 설정 
+- SirenOrder/src/main/resources/application.yml 파일
+```yaml
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      execution.isolation.thread.timeoutInMilliseconds: 610
+```
+
+- 부하에 대한 지연시간 발생코드
+- winterone/SirenOrder/src/main/java/winterschoolone/external/PaymentService.java
+``` java
+    @PostPersist
+    public void onPostPersist(){
+        Payed payed = new Payed();
+        BeanUtils.copyProperties(this, payed);
+        payed.publishAfterCommit();
+        
+        try {
+                Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+        } catch (InterruptedException e) {
+                e.printStackTrace();
+        }
+    }
+```
+
+- 부하 테스터 siege툴을 통한 서킷 브레이커 동작확인 :
+  
+  동시 사용자 100명, 60초 동안 실시 
+```
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.0.14.180:8080/sirenOrders 
+POST {"userId": "user10", "menuId": "menu10", "qty":10}'
+```
+- 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 다시 처리되면서 SirenOrders를 받기 시작
+![증빙10](https://user-images.githubusercontent.com/77368578/107917672-a8fa5180-6fab-11eb-9864-69af16a94e5e.png)
+
+# 무정지 배포
+
+winterone/Shop/kubernetes/deployment_n_readiness.yml
+```yml
+    spec:
+      containers:
+        - name: shop
+          image: hispres.azurecr.io/shop:v1
+          ports:
+            - containerPort: 8080
+#          readinessProbe:
+#            httpGet:
+#              path: '/actuator/health'
+#              port: 8080
+#            initialDelaySeconds: 10
+#            timeoutSeconds: 2
+#            periodSeconds: 5
+#            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+```
+
+![무정지배포(readiness 제외) 실행](https://user-images.githubusercontent.com/77368578/108004272-c0cbe700-7038-11eb-94c4-22a0785a7ebc.png)
+![무정지배포(readiness 제외) 실행결과](https://user-images.githubusercontent.com/77368578/108004276-c295aa80-7038-11eb-9618-1c85fe0a2f53.png)
+
+winterone/Shop/kubernetes/deployment.yml
+```yml
+    spec:
+      containers:
+        - name: shop
+          image: hispres.azurecr.io/shop:v1
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+```
+
+![무정지배포(readiness 포함) 설정 및 실행](https://user-images.githubusercontent.com/77368578/108004281-c75a5e80-7038-11eb-857d-72a1c8bde94c.png)
+![무정지배포(readiness 포함) 설정 결과](https://user-images.githubusercontent.com/77368578/108004284-ca554f00-7038-11eb-8f62-9fcb3b069ed2.png)
+
+# Self-healing (Liveness Probe)
+
+winterone/Shop/kubernetes/deployment_live.yml
+```yml
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+```
+
+self-healing(Liveness Probe)
+![self-healing설정 후 restart증적](https://user-images.githubusercontent.com/77368578/108004507-6717ec80-7039-11eb-809f-67316db013c6.png)
+![self-healing설정 결과](https://user-images.githubusercontent.com/77368578/108004513-697a4680-7039-11eb-917a-1e100ddd2ccd.png)
