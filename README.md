@@ -1,44 +1,31 @@
 # winterone
+# 서비스 시나리오
+### 기능적 요구사항
+1. 고객이 음료를 주문한다.
+2. 고객이 결제를 한다.
+3. 결제가 완료되면 주문내역을 매장으로 보낸다.
+4. 매장에서 주문을 할당한다. 
+5. 고객이 주문을 취소할 수 있다.
+6. 고객이 중간중간 주문상태를 조회한다.
 
-역할분담
 
-1
-Rental Book 기준으로 서비스 시나리오 헥사고날 아키텍쳐 다이어그램 
--> 소민아 수석
+### 비기능적 요구사항
+1. 트랜잭션
+    1. 결제가 되지않으면 주문이 진행되지 않는다 → Sync 호출
+1. 장애격리
+    1. 결제시스템에서 장애가 발생해도 주문취소는 24시간 받을 수 있어야한다 → Async (event-driven), Eventual Consistency
+    1. 주문량이 많아 매장시스템이 과중되면 잠시 주문할당을 하지 않고 잠시후에 하도록 유도한다 → Circuit breaker, fallback
+1. 성능
+    1. 고객이 주문상태를 SirenOrderHome에서 확인 할 수 있어야 한다. → CQRS 
 
-2
-ckeck points
--saga : pub/sub 구현
--cqrs : view 스티커 Mypage (그린스트커)
--correlation (서로관련있는 키)
-req/resp Sync 호출
-gateway : ingress gateway , Spring cloud gateway를 설치하던
-polyglot : 주문서비스는 h2, 배송서비스는 mysql
--> 김기웅 선임 , 손원석 수석
+# Event Storming 결과
 
-3
-deploy/pipeline : yaml 기반 이미지만든다음 yaml로 해도됨
--> 신은경 수석
+![EventStormingV1](https://user-images.githubusercontent.com/53815271/107929718-66417500-6fbd-11eb-9754-5dd92a06afe5.png)
 
-4
-Circuit Breaker :
-autoscale(hpa) : scale out되는 것 확인
--> 성성기 수석
+# 헥사고날 아키텍처 다이어그램 도출
 
-5
-zero-downtime deploy(readness probe) : avail한것을 부하테스트로 보여줘야함
-self-healing(Liveness Probe)
--> 손원석 수석
+![폴리글랏 아키텍처](https://user-images.githubusercontent.com/53815271/107929578-2f6b5f00-6fbd-11eb-9176-ac3455d5c7be.png)
 
-6
-config map/persistence volume :마이크로 서비스내에서 활용해야함 
--> 김금 선임
-
-참조 git 주소
-
-https://github.com/HorangApple/rentalbook
-
-https://github.com/phone82
 
 # 구현
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 8084, 8088 이다)
