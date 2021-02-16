@@ -14,7 +14,7 @@
     1. 결제가 되지않으면 주문이 진행되지 않는다 → Sync 호출
 1. 장애격리
     1. 결제시스템에서 장애가 발생해도 주문취소는 24시간 받을 수 있어야한다 → Async (event-driven), Eventual Consistency
-    1. 주문량이 많아 매장시스템이 과중되면 잠시 주문할당을 하지 않고 잠시후에 하도록 유도한다 → Circuit breaker, fallback
+    1. 주문량이 많아 결재시스템 과중되면 잠시 주문할당을 하지 않고 잠시후에 하도록 유도한다 → Circuit breaker, fallback
 1. 성능
     1. 고객이 주문상태를 SirenOrderHome에서 확인 할 수 있어야 한다. → CQRS 
 
