@@ -510,9 +510,6 @@ spec:
 kubectl create configmap apiurl --from-literal=url=http://10.0.92.205:8080 -n tutorial
 ```
 
-   ![image](https://user-images.githubusercontent.com/74236548/107925554-f11f7100-6fb7-11eb-8127-a0b042034312.png)
-   
-   
    ![image](https://user-images.githubusercontent.com/74236548/107968395-aa4e6d00-6ff1-11eb-9112-2f1d77a561ad.png)
 
 # 오토스케일 아웃
