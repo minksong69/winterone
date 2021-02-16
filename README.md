@@ -465,6 +465,7 @@ spec:
                   key: url
 ```	  
 - deploy 완료
+
 ![전체 MSA](https://user-images.githubusercontent.com/77368578/108006011-992b4d80-703d-11eb-8df9-a2cea19aa693.png)
 
 # ConfigMap 
@@ -554,7 +555,7 @@ kubectl get all -n tutorial
 - Hystrix를 설정 : 요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도
   유지되면 CB 회로가 닫히도록(요청을 빠르게 실패처리, 차단) 설정
 
-- 동기 호출 주체인 SirenOrderwinterone에서 Hystrix 설정 
+- 동기 호출 주체인 SirenOrder에서 Hystrix 설정 
 - SirenOrder/src/main/resources/application.yml 파일
 ```yaml
 feign:
@@ -591,6 +592,7 @@ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.0.14.180:
 POST {"userId": "user10", "menuId": "menu10", "qty":10}'
 ```
 - 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 다시 처리되면서 SirenOrders를 받기 시작
+
 ![증빙10](https://user-images.githubusercontent.com/77368578/107917672-a8fa5180-6fab-11eb-9864-69af16a94e5e.png)
 
 # 무정지 배포
@@ -622,6 +624,7 @@ winterone/Shop/kubernetes/deployment_n_readiness.yml
             failureThreshold: 5
 ```
 - 무정지 배포가 되지 않아 Siege 결과 Availability가 100%가 되지 않음
+
 ![무정지배포(readiness 제외) 실행](https://user-images.githubusercontent.com/77368578/108004272-c0cbe700-7038-11eb-94c4-22a0785a7ebc.png)
 ![무정지배포(readiness 제외) 실행결과](https://user-images.githubusercontent.com/77368578/108004276-c295aa80-7038-11eb-9618-1c85fe0a2f53.png)
 
@@ -653,6 +656,7 @@ winterone/Shop/kubernetes/deployment.yml
 ```
 
 - 무정지 배포를 위한 readiness 옵션 설정 후 적용 시 Siege 결과 Availability가 100% 확인
+
 ![무정지배포(readiness 포함) 설정 및 실행](https://user-images.githubusercontent.com/77368578/108004281-c75a5e80-7038-11eb-857d-72a1c8bde94c.png)
 ![무정지배포(readiness 포함) 설정 결과](https://user-images.githubusercontent.com/77368578/108004284-ca554f00-7038-11eb-8f62-9fcb3b069ed2.png)
 
@@ -678,7 +682,9 @@ winterone/Shop/kubernetes/deployment_live.yml
 ```
 
 - Shop pod에 Liveness Probe 옵션 적용 확인
+
 ![self-healing설정 후 restart증적](https://user-images.githubusercontent.com/77368578/108004507-6717ec80-7039-11eb-809f-67316db013c6.png)
 
 - Shop pod에서 적용 시 retry발생 확인
+
 ![self-healing설정 결과](https://user-images.githubusercontent.com/77368578/108004513-697a4680-7039-11eb-917a-1e100ddd2ccd.png)
