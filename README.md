@@ -514,12 +514,38 @@ kubectl create configmap apiurl --from-literal=url=http://10.0.92.205:8080 -n tu
    
    ![image](https://user-images.githubusercontent.com/74236548/107968395-aa4e6d00-6ff1-11eb-9112-2f1d77a561ad.png)
 
-- 설정한 URL로 서비스 호출 (오더 조회) 
+# 오토스케일 아웃
 
-```
-http http://10.0.92.205:8080/payments/1
+- 서킷 브레이커는 시스템을 안정되게 운영할 수 있게 해줬지만, 사용자의 요청이 급증하는 경우, 오토스케일 아웃이 필요하다.
+
+>- 단, 부하가 제대로 걸리기 위해서, recipe 서비스의 리소스를 줄여서 재배포한다.(winterone/Shop/kubernetes/deployment.yml 수정)
+
+```yaml
+          resources:
+            limits:
+              cpu: 500m
+            requests:
+              cpu: 200m
 ```
 
-   ![image](https://user-images.githubusercontent.com/74236548/107968472-c18d5a80-6ff1-11eb-9fc1-73616fcb7f32.png)
-   
+- 다시 expose 해준다.
+```
+kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
+```
+- recipe 시스템에 replica를 자동으로 늘려줄 수 있도록 HPA를 설정한다. 설정은 CPU 사용량이 15%를 넘어서면 replica를 10개까지 늘려준다.
+```
+kubectl autoscale deploy shop --min=1 --max=10 --cpu-percent=15 -n tutorial
+```
+- siege를 활용해서 워크로드를 2분간 걸어준다. (Cloud 내 siege pod에서 부하줄 것)
+```
+kubectl exec -it pod/siege -c siege -n tutorial -- /bin/bash
+siege -c100 -t120S -r10 -v --content-type "application/json" 'http://10.0.14.180:8080/shops POST {"orderId": 111, "userId": "user10", "menuId": "menu10", "qty":10}'
+```
+![autoscale(hpa) 실행 및 부하발생](https://user-images.githubusercontent.com/77368578/107917594-8405de80-6fab-11eb-830c-b15f255b2314.png)
+- 오토스케일 모니터링을 걸어 스케일 아웃이 자동으로 진행됨을 확인한다.
+```
+kubectl get all -n tutorial
+```
+![autoscale(hpa)결과](https://user-images.githubusercontent.com/77368578/107917604-8831fc00-6fab-11eb-83bb-9ba19159d00d.png)
+
 
