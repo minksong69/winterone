@@ -364,11 +364,11 @@ public interface PaymentService {
 # Deploy / Pipeline
 
 - git에서 소스 가져오기
-
+```
 git clone https://github.com/hispres/winterone.git
-
+```
 - Build 하기
-
+```
 cd /winterone
 cd gateway
 mvn package
@@ -388,9 +388,10 @@ mvn package
 cd ..
 cd sirenorderhome
 mvn package
+```
 
 - Docker Image Push/deploy/서비스생성
-
+```
 cd gateway
 az acr build --registry skteam01 --image skteam01.azurecr.io/gateway:v1 .
 kubectl create ns tutorial
@@ -405,7 +406,6 @@ az acr build --registry skteam01 --image skteam01.azurecr.io/payment:v1 .
 kubectl create deploy payment --image=skteam01.azurecr.io/payment:v1 -n tutorial
 kubectl expose deploy payment --type=ClusterIP --port=8080 -n tutorial
 
-
 cd ..
 cd shop
 az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorderhome:v1 .
@@ -413,25 +413,25 @@ az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorderhome:v1 .
 kubectl create deploy shop --image=skteam01.azurecr.io/sirenorderhome:v1 -n tutorial
 kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
 
-
 cd ..
 cd sirenorderhome
 az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorderhome:v1 .
 
 kubectl create deploy sirenorderhome --image=skteam01.azurecr.io/sirenorderhome:v1 -n tutorial
 kubectl expose deploy sirenorderhome --type=ClusterIP --port=8080 -n tutorial
-
+```
 
 - yml파일 이용한 deploy
-
+```
 cd ..
 cd SirenOrder
 az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorder:v1 .
-
+```
 ![증빙7](https://user-images.githubusercontent.com/77368578/107920373-35a70e80-6fb0-11eb-8024-a6fc42fea93f.png)
 
+```
 kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
-
+```
 
 - winterone/SirenOrder/kubernetes/deployment.yml 파일 
 ```yml
@@ -466,3 +466,60 @@ spec:
 ```	  
 - deploy 완료
 ![전체 MSA](https://user-images.githubusercontent.com/77368578/108006011-992b4d80-703d-11eb-8df9-a2cea19aa693.png)
+
+# ConfigMap 
+- 시스템별로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리
+
+- application.yml 파일에 ${configurl} 설정
+
+```yaml
+      feign:
+        hystrix:
+          enabled: true
+      hystrix:
+        command:
+          default:
+            execution.isolation.thread.timeoutInMilliseconds: 610
+      api:
+        url:
+          Payment: ${configurl}
+
+```
+
+- ConfigMap 사용(/SirenOrder/src/main/java/winterschoolone/external/PaymentService.java) 
+
+```java
+
+      @FeignClient(name="Payment", url="${api.url.Payment}")
+      public interface PaymentService {
+      
+	      @RequestMapping(method= RequestMethod.POST, path="/payments")
+              public void pay(@RequestBody Payment payment);
+	      
+      }
+```
+
+- Deployment.yml 에 ConfigMap 적용
+
+![image](https://user-images.githubusercontent.com/74236548/107925407-c2a19600-6fb7-11eb-9325-6bd2cd94455c.png)
+
+- ConfigMap 생성
+
+```
+kubectl create configmap apiurl --from-literal=url=http://10.0.92.205:8080 -n tutorial
+```
+
+   ![image](https://user-images.githubusercontent.com/74236548/107925554-f11f7100-6fb7-11eb-8127-a0b042034312.png)
+   
+   
+   ![image](https://user-images.githubusercontent.com/74236548/107968395-aa4e6d00-6ff1-11eb-9112-2f1d77a561ad.png)
+
+- 설정한 URL로 서비스 호출 (오더 조회) 
+
+```
+http http://10.0.92.205:8080/payments/1
+```
+
+   ![image](https://user-images.githubusercontent.com/74236548/107968472-c18d5a80-6ff1-11eb-9fc1-73616fcb7f32.png)
+   
+
