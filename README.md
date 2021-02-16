@@ -360,4 +360,5 @@ public interface PaymentService {
 ![증빙9](https://user-images.githubusercontent.com/53815271/107910394-a98beb80-6f9d-11eb-841c-aa6ab38cf99b.png)
 
 # 운영
-.
+
+# 동기식 호출 과 Fallback 처리
