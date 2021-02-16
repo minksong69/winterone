@@ -595,6 +595,7 @@ POST {"userId": "user10", "menuId": "menu10", "qty":10}'
 
 # 무정지 배포
 
+- 무정지 배포가 되지 않는 readiness 옵션을 제거 설정
 winterone/Shop/kubernetes/deployment_n_readiness.yml
 ```yml
     spec:
@@ -620,10 +621,11 @@ winterone/Shop/kubernetes/deployment_n_readiness.yml
             periodSeconds: 5
             failureThreshold: 5
 ```
-
+- 무정지 배포가 되지 않아 Siege 결과 Availability가 100%가 되지 않음
 ![무정지배포(readiness 제외) 실행](https://user-images.githubusercontent.com/77368578/108004272-c0cbe700-7038-11eb-94c4-22a0785a7ebc.png)
 ![무정지배포(readiness 제외) 실행결과](https://user-images.githubusercontent.com/77368578/108004276-c295aa80-7038-11eb-9618-1c85fe0a2f53.png)
 
+- 무정지 배포를 위한 readiness 옵션 설정
 winterone/Shop/kubernetes/deployment.yml
 ```yml
     spec:
@@ -650,11 +652,13 @@ winterone/Shop/kubernetes/deployment.yml
             failureThreshold: 5
 ```
 
+- 무정지 배포를 위한 readiness 옵션 설정 후 적용 시 Siege 결과 Availability가 100% 확인
 ![무정지배포(readiness 포함) 설정 및 실행](https://user-images.githubusercontent.com/77368578/108004281-c75a5e80-7038-11eb-857d-72a1c8bde94c.png)
 ![무정지배포(readiness 포함) 설정 결과](https://user-images.githubusercontent.com/77368578/108004284-ca554f00-7038-11eb-8f62-9fcb3b069ed2.png)
 
 # Self-healing (Liveness Probe)
 
+- Self-healing 확인을 위한 Liveness Probe 옵션 변경
 winterone/Shop/kubernetes/deployment_live.yml
 ```yml
           readinessProbe:
@@ -673,6 +677,8 @@ winterone/Shop/kubernetes/deployment_live.yml
             periodSeconds: 5
 ```
 
-self-healing(Liveness Probe)
+- Shop pod에 Liveness Probe 옵션 적용 확인
 ![self-healing설정 후 restart증적](https://user-images.githubusercontent.com/77368578/108004507-6717ec80-7039-11eb-809f-67316db013c6.png)
+
+- Shop pod에서 적용 시 retry발생 확인
 ![self-healing설정 결과](https://user-images.githubusercontent.com/77368578/108004513-697a4680-7039-11eb-917a-1e100ddd2ccd.png)
