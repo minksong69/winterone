@@ -360,16 +360,15 @@ public interface PaymentService {
 ![증빙9](https://user-images.githubusercontent.com/53815271/107910394-a98beb80-6f9d-11eb-841c-aa6ab38cf99b.png)
 
 # 운영
-.
 
 # Deploy / Pipeline
 
 - git에서 소스 가져오기
-```
+
 git clone https://github.com/hispres/winterone.git
-```
+
 - Build 하기
-```
+
 cd /winterone
 cd gateway
 mvn package
@@ -389,9 +388,9 @@ mvn package
 cd ..
 cd sirenorderhome
 mvn package
-```
+
 - Docker Image Push/deploy/서비스생성
-```
+
 cd gateway
 az acr build --registry skteam01 --image skteam01.azurecr.io/gateway:v1 .
 kubectl create ns tutorial
@@ -422,20 +421,20 @@ az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorderhome:v1 .
 kubectl create deploy sirenorderhome --image=skteam01.azurecr.io/sirenorderhome:v1 -n tutorial
 kubectl expose deploy sirenorderhome --type=ClusterIP --port=8080 -n tutorial
 
-```
+
 - yml파일 이용한 deploy
-```
+
 cd ..
 cd SirenOrder
 az acr build --registry skteam01 --image skteam01.azurecr.io/sirenorder:v1 .
-```
+
 ![증빙7](https://user-images.githubusercontent.com/77368578/107920373-35a70e80-6fb0-11eb-8024-a6fc42fea93f.png)
-```
+
 kubectl expose deploy shop --type=ClusterIP --port=8080 -n tutorial
 
-```
+
 - winterone/SirenOrder/kubernetes/deployment.yml 파일 
-```
+```yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -464,4 +463,6 @@ spec:
                 configMapKeyRef:
                   name: apiurl
                   key: url
-
+```	  
+- deploy 완료
+![전체 MSA](https://user-images.githubusercontent.com/77368578/108006011-992b4d80-703d-11eb-8df9-a2cea19aa693.png)
