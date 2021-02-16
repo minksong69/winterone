@@ -683,8 +683,9 @@ winterone/Shop/kubernetes/deployment_live.yml
 
 - Shop pod에 Liveness Probe 옵션 적용 확인
 
-![self-healing설정 후 restart증적](https://user-images.githubusercontent.com/77368578/108004507-6717ec80-7039-11eb-809f-67316db013c6.png)
+![self-healing설정 결과](https://user-images.githubusercontent.com/77368578/108004513-697a4680-7039-11eb-917a-1e100ddd2ccd.png)
 
 - Shop pod에서 적용 시 retry발생 확인
 
-![self-healing설정 결과](https://user-images.githubusercontent.com/77368578/108004513-697a4680-7039-11eb-917a-1e100ddd2ccd.png)
+![self-healing설정 후 restart증적](https://user-images.githubusercontent.com/77368578/108004507-6717ec80-7039-11eb-809f-67316db013c6.png)
+
