@@ -16,7 +16,7 @@
    나. 결재가 취소되면 배달이 진행되지 않는다 → Sync 호출
 2. 장애격리
    가. 배송에서 장애가 발생해도 결재와 주문은 24시간 받을 수 있어야 한다 → Async (event-driven), Eventual Consistency
-   나. 결재가 과중되면 주문을 받지 않고 잠시 후에 하도록 유도 한다 → Circuit breaker, fallback
+   나. 결재가 과중되면 주문을 받지 않고 잠시 후에 하도록 유도 한다 → Circuit breaker, fallback 
 3. 성능
    가. 고객이 주문상태를 주문내역조회에서 확인 할 수 있어야 한다. → CQRS 
 
